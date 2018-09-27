@@ -17,15 +17,26 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 public class RegisterActivity extends AppCompatActivity implements View.OnClickListener {
 
     private Button buttonRegister;
+
+    private EditText editTextName;
     private EditText editTextEmail;
+    private EditText editTextNumber;
     private EditText editTextPassword;
+    private EditText editTextPasswordConfirm;
+
     private TextView textViewLogIn;
+
     private ProgressDialog progressDialog;
+
     private FirebaseAuth firebaseAuth;
+
+    DatabaseReference databaseReference;
 
 
     @Override
@@ -34,6 +45,7 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
         setContentView(R.layout.activity_register);
 
         firebaseAuth = FirebaseAuth.getInstance();
+        databaseReference = FirebaseDatabase.getInstance().getReference("User");
 
         if(firebaseAuth.getCurrentUser()!=null){
             finish();
@@ -41,26 +53,68 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
         }
 
         progressDialog = new ProgressDialog(this);
-        buttonRegister = (Button)findViewById(R.id.userRegister);
-        editTextEmail = (EditText)findViewById(R.id.editTextEmail);
-        editTextPassword=(EditText)findViewById(R.id.editTextPassword);
-        textViewLogIn = (TextView)findViewById(R.id.textViewLogIn);
+
+        buttonRegister = (Button)findViewById(R.id.buttonRegisterRegister);
+
+        editTextName=(EditText)findViewById(R.id.editTextRegisterName);
+        editTextEmail = (EditText)findViewById(R.id.editTextRegisterEmail);
+        editTextNumber = (EditText)findViewById(R.id.editTextRegisterCell);
+        editTextPassword=(EditText)findViewById(R.id.editTextRegisterPassword);
+        editTextPasswordConfirm=(EditText)findViewById(R.id.editTextRegisterPasswordConfirm);
+
+        textViewLogIn = (TextView)findViewById(R.id.textViewRegisterLogIn);
+
+        if(UserName.user_Type.equals("NGO")){
+            editTextName.setHint("Enter Ngo Name Here");
+            editTextEmail.setHint("Enter Ngo Email ID Here");
+        }
 
         buttonRegister.setOnClickListener(this);
         textViewLogIn.setOnClickListener(this);
     }
 
-    private void registerUser(){
+    @Override
+    public void onClick(View view) {
+
+        if(view == buttonRegister){
+            registerUser();
+        }
+        if(view == textViewLogIn){
+            Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
+            startActivity(intent);
+        }
+
+    }
+
+    private void registerUser() {
+        String name = editTextName.getText().toString().trim();
         String email = editTextEmail.getText().toString().trim();
+        String number = editTextNumber.getText().toString().trim();
         String password = editTextPassword.getText().toString().trim();
+        String passwordConfirm = editTextPasswordConfirm.getText().toString().trim();
+
+        if(TextUtils.isEmpty(name)){
+            Toast.makeText(this, "Please Enter Name Of Your College", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         if(TextUtils.isEmpty(email)){
             Toast.makeText(this, "Please Enter Your Email Id", Toast.LENGTH_SHORT).show();
             return;
         }
 
+        if(TextUtils.isEmpty(number)){
+            Toast.makeText(this, "Please Enter Your Cell Number", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         if(TextUtils.isEmpty(password)){
             Toast.makeText(this, "Please Enter Password To Continue", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if(!TextUtils.equals(password,passwordConfirm)){
+            Toast.makeText(this, "Please Enter Correct Password", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -74,6 +128,7 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
                 progressDialog.dismiss();
 
                 if(task.isSuccessful()){
+                    addUser();
                     Toast.makeText(RegisterActivity.this, "User Registered Successfully...", Toast.LENGTH_SHORT).show();
                     finish();
                     startActivity(new Intent(getApplicationContext() , MainActivity.class));
@@ -86,17 +141,24 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
         });
     }
 
-    @Override
-    public void onClick(View v) {
+    private void addUser(){
+        String name = editTextName.getText().toString().trim();
+        String email = editTextEmail.getText().toString().trim();
+        String number = editTextNumber.getText().toString().trim();
+        String password = editTextPassword.getText().toString().trim();
+        String category = UserName.user_Type;
 
-        if(v == buttonRegister){
-            registerUser();
-        }
-        if(v == textViewLogIn){
-            finish();
-            Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
-            startActivity(intent);
-        }
+        if(!TextUtils.isEmpty(name) && (!TextUtils.isEmpty(email)) && !TextUtils.isEmpty(password) && !TextUtils.isEmpty(number) ){
+            String UID = firebaseAuth.getUid();
 
+            User user = new User(UID , name , email ,  password , number , category);
+
+            databaseReference.child(UID).setValue(user);
+            UserName.current_User=editTextEmail.getText().toString().trim();
+            Toast.makeText(this, " All The Details Added Successfully", Toast.LENGTH_SHORT).show();
+        }
+        else{
+            Toast.makeText(this, "Please Fill-up All The Details", Toast.LENGTH_SHORT).show();
+        }
     }
 }

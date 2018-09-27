@@ -16,20 +16,34 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 public class LoginActivity extends AppCompatActivity implements View.OnClickListener {
 
     private Button buttonLogin;
-    private EditText editTextUserID;
-    private EditText editTextUserPassword;
-    private TextView textViewRegister;
+
+    private EditText editTextEmail;
+
+    private EditText editTextPassword;
+
+    private TextView textViewLoginRegister;
+
     private ProgressDialog progressDialog;
+
     private FirebaseAuth firebaseAuth;
+
+    DatabaseReference databaseReference;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+
+
+
+        databaseReference = FirebaseDatabase.getInstance().getReference("User");
 
         firebaseAuth = FirebaseAuth.getInstance();
 
@@ -40,18 +54,31 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
         progressDialog = new ProgressDialog(this);
 
-        buttonLogin = (Button)findViewById(R.id.userLogIN);
-        editTextUserID = (EditText)findViewById(R.id.editTextUserID);
-        editTextUserPassword=(EditText)findViewById(R.id.editTextUserPassword);
-        textViewRegister = (TextView)findViewById(R.id.textViewRegister);
+        buttonLogin = (Button)findViewById(R.id.buttonLoginLogin);
+
+        editTextEmail = (EditText)findViewById(R.id.editTextLoginEmail);
+
+        editTextPassword=(EditText)findViewById(R.id.editTextLoginPassword);
+
+        textViewLoginRegister = (TextView)findViewById(R.id.textViewLoginRegister);
 
         buttonLogin.setOnClickListener(this);
-        textViewRegister.setOnClickListener(this);
+        textViewLoginRegister.setOnClickListener(this);
     }
 
-    private void logInUser(){
-        String email = editTextUserID.getText().toString().trim();
-        String password = editTextUserPassword.getText().toString().trim();
+    @Override
+    public void onClick(View view) {
+        if(view == buttonLogin){
+            logInUser();
+        }
+        if(view == textViewLoginRegister){
+            startActivity(new Intent(this , RegisterActivity.class));
+        }
+    }
+
+    private void logInUser() {
+        String email = editTextEmail.getText().toString().trim();
+        String password = editTextPassword.getText().toString().trim();
 
         if(TextUtils.isEmpty(email)){
             Toast.makeText(this, "Please Enter Your Email Id", Toast.LENGTH_SHORT).show();
@@ -63,7 +90,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             return;
         }
 
-        progressDialog.setMessage("LogIn , Please wait .....");
+        progressDialog.setMessage("Authenticating, Please wait...");
         progressDialog.show();
 
         firebaseAuth.signInWithEmailAndPassword(email,password).addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
@@ -73,24 +100,16 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
                 if(task.isSuccessful()){
                     finish();
-                    startActivity(new Intent(getApplicationContext() , MainActivity.class));
+                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                    startActivity(intent);
+
+                }
+                else{
+                    Toast.makeText(LoginActivity.this, "Authentication Failed", Toast.LENGTH_SHORT).show();
                 }
 
             }
         });
-    }
-
-    @Override
-    public void onClick(View v) {
-
-        if(v == buttonLogin){
-            logInUser();
-        }
-        if(v == textViewRegister){
-            finish();
-            startActivity(new Intent(this , RegisterActivity.class));
-        }
-
     }
 }
 
