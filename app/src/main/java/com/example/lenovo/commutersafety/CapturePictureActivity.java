@@ -20,11 +20,14 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -43,11 +46,18 @@ public class CapturePictureActivity extends AppCompatActivity{
     private FirebaseStorage firebaseStorage;
     private String deviceIdentifier;
 
+    DatabaseReference databaseReference;
+    EditText ztitle , desc , sol;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_capture_picture);
 
+        databaseReference = FirebaseDatabase.getInstance().getReference("Zones");
+        ztitle = (EditText) findViewById(R.id.editTextTitle);
+        desc = (EditText)findViewById(R.id.editTextDescription);
+        sol = (EditText)findViewById(R.id.editTextSolution);
 
 
         image = findViewById(R.id.picture);
@@ -135,8 +145,24 @@ public class CapturePictureActivity extends AppCompatActivity{
     //save captured picture on cloud storage
     private View.OnClickListener saveCloud = new View.OnClickListener() {
         @Override
-        public void onClick(View view) { addToCloudStorage(); }
+        public void onClick(View view) {
+            addToCloudStorage();
+            addDataZone();
+        }
     };
+
+    private void addDataZone() {
+        String ZoneTitle = ztitle.getText().toString().trim();
+        String ZoneDescription = desc.getText().toString().trim();
+        String ZoneSolution = sol.getText().toString().trim();
+        String ZoneLocation = "temp";
+
+        String key = databaseReference.getKey();
+        Zones zn = new Zones(ZoneTitle,ZoneDescription,ZoneSolution,ZoneLocation);
+        databaseReference.child(key).setValue(zn);
+        Toast.makeText(this, " All The Details Added Successfully", Toast.LENGTH_SHORT).show();
+    }
+
     private void addToCloudStorage() {
         File f = new File(pictureFilePath);
         Uri picUri = Uri.fromFile(f);

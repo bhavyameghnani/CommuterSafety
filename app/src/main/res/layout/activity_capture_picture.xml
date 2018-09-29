@@ -51,7 +51,7 @@
         android:text="Upload The Zone" />
 
     <EditText
-        android:id="@+id/editText"
+        android:id="@+id/editTextSolution"
         android:layout_width="151dp"
         android:layout_height="116dp"
         android:layout_alignParentEnd="true"
@@ -63,7 +63,7 @@
         android:inputType="textMultiLine" />
 
     <EditText
-        android:id="@+id/editText2"
+        android:id="@+id/editTextDescription"
         android:layout_width="151dp"
         android:layout_height="116dp"
         android:layout_alignParentBottom="true"
@@ -77,7 +77,7 @@
         android:selectAllOnFocus="false" />
 
     <EditText
-        android:id="@+id/editText3"
+        android:id="@+id/editTextTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
