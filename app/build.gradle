@@ -36,5 +36,7 @@ dependencies {
 
     implementation 'com.google.firebase:firebase-database:+'
     implementation 'com.firebase:geofire-android:+'
+
+    implementation 'com.google.firebase:firebase-storage:+'
 }
 apply plugin: 'com.google.gms.google-services'

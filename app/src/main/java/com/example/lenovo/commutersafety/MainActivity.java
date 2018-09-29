@@ -96,6 +96,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Intent intent = new Intent(MainActivity.this, MapsActivity.class);
             startActivity(intent);
         }
+
+        if(view == createWishList){
+            Intent intent = new Intent(MainActivity.this, CapturePictureActivity.class);
+            startActivity(intent);
+        }
     }
 
 }

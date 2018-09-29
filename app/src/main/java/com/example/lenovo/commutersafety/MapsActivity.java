@@ -216,19 +216,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
             @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
             @Override
+
             public void onKeyEntered(String key, GeoLocation location) {
-                sendNotification("EToll",String.format("%s Entered into the Toll Area",key));
+                sendNotification("DangerZone",String.format("%s Entered into the ZoneArea",key));
             }
 
             @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
             @Override
             public void onKeyExited(String key) {
-                sendNotification("EToll",String.format("%s Exited from the Toll Area",key));
+                sendNotification("DangerZone",String.format("%s Exited from the ZoneArea",key));
             }
 
             @Override
             public void onKeyMoved(String key, GeoLocation location) {
-                Log.d("MOVE",String.format("%s Moveing within the dangerous area[%f/%f]",key,location.latitude,location.longitude));
+                Log.d("MOVE",String.format("%s Moving within the dangerous area[%f/%f]",key,location.latitude,location.longitude));
             }
 
             @Override
@@ -267,21 +268,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         myLastLocation = location;
         displayLocation();
     }
-
-    /*@Override
-    public void onStatusChanged(String provider, int status, Bundle extras) {
-
-    }
-
-    @Override
-    public void onProviderEnabled(String provider) {
-
-    }
-
-    @Override
-    public void onProviderDisabled(String provider) {
-
-    }*/
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
