@@ -25,7 +25,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginRight="10dp"
-            android:text="Capture" />
+            android:text="Capture Now" />
 
         <Button
             android:id="@+id/save_local"
@@ -33,14 +33,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginRight="10dp"
-            android:text="Save Gallary" />
+            android:text="Save To Gallery" />
 
         <Button
             android:id="@+id/save_cloud"
             style="@style/Widget.AppCompat.Button.Colored"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Save Cloud" />
+            android:text="Upload The Zone" />
     </LinearLayout>
 
 </LinearLayout>
