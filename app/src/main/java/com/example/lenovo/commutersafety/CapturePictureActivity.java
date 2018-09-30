@@ -17,6 +17,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -38,7 +39,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.UUID;
 
-public class CapturePictureActivity extends AppCompatActivity{
+public class CapturePictureActivity extends AppCompatActivity
+{
     private static final String TAG = "CapturePicture";
     static final int REQUEST_PICTURE_CAPTURE = 1;
     private ImageView image;
@@ -46,8 +48,11 @@ public class CapturePictureActivity extends AppCompatActivity{
     private FirebaseStorage firebaseStorage;
     private String deviceIdentifier;
 
+
     DatabaseReference databaseReference;
-    EditText ztitle , desc , sol;
+    private EditText ztitle, zdesc, zsol;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,9 +61,8 @@ public class CapturePictureActivity extends AppCompatActivity{
 
         databaseReference = FirebaseDatabase.getInstance().getReference("Zones");
         ztitle = (EditText) findViewById(R.id.editTextTitle);
-        desc = (EditText)findViewById(R.id.editTextDescription);
-        sol = (EditText)findViewById(R.id.editTextSolution);
-
+        zdesc = (EditText) findViewById(R.id.editTextDescription);
+        zsol = (EditText) findViewById(R.id.editTextSolution);
 
         image = findViewById(R.id.picture);
 
@@ -75,6 +79,8 @@ public class CapturePictureActivity extends AppCompatActivity{
         firebaseStorage = FirebaseStorage.getInstance();
         getInstallationIdentifier();
     }
+
+
 
     private View.OnClickListener capture = new View.OnClickListener() {
         @Override
@@ -142,26 +148,15 @@ public class CapturePictureActivity extends AppCompatActivity{
         this.sendBroadcast(galleryIntent);
         Toast.makeText(CapturePictureActivity.this, "Image has been uploaded to phone storage"+pictureFilePath, Toast.LENGTH_SHORT).show();
     }
+
+
     //save captured picture on cloud storage
     private View.OnClickListener saveCloud = new View.OnClickListener() {
         @Override
-        public void onClick(View view) {
-            addToCloudStorage();
-            addDataZone();
-        }
+        public void onClick(View view) { addToCloudStorage(); addDataZone(); }
     };
 
-    private void addDataZone() {
-        String ZoneTitle = ztitle.getText().toString().trim();
-        String ZoneDescription = desc.getText().toString().trim();
-        String ZoneSolution = sol.getText().toString().trim();
-        String ZoneLocation = "temp";
 
-        String key = databaseReference.getKey();
-        Zones zn = new Zones(ZoneTitle,ZoneDescription,ZoneSolution,ZoneLocation);
-        databaseReference.child(key).setValue(zn);
-        Toast.makeText(this, " All The Details Added Successfully", Toast.LENGTH_SHORT).show();
-    }
 
     private void addToCloudStorage() {
         File f = new File(pictureFilePath);
@@ -198,6 +193,35 @@ public class CapturePictureActivity extends AppCompatActivity{
             }
         }
         return deviceIdentifier;
+    }
+
+    private void addDataZone() {
+        String ZoneTitle = ztitle.getText().toString().trim();
+        String ZoneData = zdesc.getText().toString().trim();
+        String ZoneSolution = zsol.getText().toString().trim();
+        String ZoneLat = ztitle.getText().toString().trim();
+        String ZoneLong = ztitle.getText().toString().trim();
+        String ZoneStatus = ztitle.getText().toString().trim();
+
+        if (TextUtils.isEmpty(ZoneTitle)) {
+            Toast.makeText(this, "Please Enter The Zone Title", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (TextUtils.isEmpty(ZoneData)) {
+            Toast.makeText(this, "Please Enter The Zone Description", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (TextUtils.isEmpty(ZoneSolution)) {
+            Toast.makeText(this, "Please Enter The Zone Solution", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String ZoneKey = databaseReference.push().getKey();
+        Zone zn = new Zone(ZoneKey , ZoneTitle, ZoneData,ZoneSolution, ZoneLat , ZoneLong , ZoneStatus);
+        databaseReference.child(ZoneKey).setValue(zn);
+        Toast.makeText(this, " All The Details Added Successfully", Toast.LENGTH_SHORT).show();
     }
 
 }

@@ -4,9 +4,11 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
-    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
 
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <!--
@@ -17,8 +19,6 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-
-
 
     <application
         android:allowBackup="true"
@@ -52,7 +52,7 @@
         <activity android:name=".MainActivity" />
         <activity android:name=".LoginActivity" />
         <activity android:name=".RegisterActivity" />
-        <activity android:name=".CapturePictureActivity"></activity>
+        <activity android:name=".CapturePictureActivity" />
 
         <provider
             android:name="android.support.v4.content.FileProvider"
@@ -61,12 +61,10 @@
             android:grantUriPermissions="true">
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/file_list">
-            </meta-data>
+                android:resource="@xml/file_list"></meta-data>
         </provider>
 
+        <activity android:name=".ZoneDetailActivity"></activity>
     </application>
-
-
 
 </manifest>

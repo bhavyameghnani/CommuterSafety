@@ -35,11 +35,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private FirebaseUser firebaseUser;
     DatabaseReference dataReference;
 
+    private Button buttonData;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        buttonData = (Button) findViewById(R.id.save_data_activity);
+        buttonData.setOnClickListener(this);
 
         firebaseAuth = FirebaseAuth.getInstance();
         firebaseUser=firebaseAuth.getCurrentUser();
@@ -99,6 +104,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         if(view == createWishList){
             Intent intent = new Intent(MainActivity.this, CapturePictureActivity.class);
+            startActivity(intent);
+        }
+
+        if(view==buttonData){
+            Intent intent = new Intent(MainActivity.this, ZoneDetailActivity.class);
             startActivity(intent);
         }
     }
