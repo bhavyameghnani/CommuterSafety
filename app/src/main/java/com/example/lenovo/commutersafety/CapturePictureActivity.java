@@ -39,7 +39,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.UUID;
 
-public class CapturePictureActivity extends AppCompatActivity
+public class CapturePictureActivity extends AppCompatActivity implements View.OnClickListener
 {
     private static final String TAG = "CapturePicture";
     static final int REQUEST_PICTURE_CAPTURE = 1;
@@ -51,6 +51,10 @@ public class CapturePictureActivity extends AppCompatActivity
 
     DatabaseReference databaseReference;
     private EditText ztitle, zdesc, zsol;
+
+    public String zoneImageURI=null;
+
+    Button saveData;
 
 
 
@@ -68,6 +72,10 @@ public class CapturePictureActivity extends AppCompatActivity
 
         Button captureButton = findViewById(R.id.capture);
         captureButton.setOnClickListener(capture);
+
+        saveData = findViewById(R.id.save_data);
+        saveData.setOnClickListener(this);
+
 
         if(!getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)){
             captureButton.setEnabled(false);
@@ -153,7 +161,7 @@ public class CapturePictureActivity extends AppCompatActivity
     //save captured picture on cloud storage
     private View.OnClickListener saveCloud = new View.OnClickListener() {
         @Override
-        public void onClick(View view) { addToCloudStorage(); addDataZone(); }
+        public void onClick(View view) { addToCloudStorage(); }
     };
 
 
@@ -165,7 +173,7 @@ public class CapturePictureActivity extends AppCompatActivity
 
         FirebaseStorage firebaseStorage = FirebaseStorage.getInstance();
         StorageReference storageRef = firebaseStorage.getReference();
-        StorageReference uploadeRef = storageRef.child(cloudFilePath);
+        final StorageReference uploadeRef = storageRef.child(cloudFilePath);
 
         uploadeRef.putFile(picUri).addOnFailureListener(new OnFailureListener(){
             public void onFailure(@NonNull Exception exception){
@@ -174,9 +182,14 @@ public class CapturePictureActivity extends AppCompatActivity
         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>(){
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot){
-                Toast.makeText(CapturePictureActivity.this,
-                        "Image has been uploaded to cloud storage",
-                        Toast.LENGTH_SHORT).show();
+                uploadeRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                    @Override
+                    public void onSuccess(Uri uri) {
+                        Uri downloadURI = uri;
+                        zoneImageURI = downloadURI.toString();
+                    }
+                });
+                Toast.makeText(CapturePictureActivity.this, "Image has been uploaded to cloud storage", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -202,6 +215,7 @@ public class CapturePictureActivity extends AppCompatActivity
         String ZoneLat = ztitle.getText().toString().trim();
         String ZoneLong = ztitle.getText().toString().trim();
         String ZoneStatus = ztitle.getText().toString().trim();
+        String ZoneImage = zoneImageURI;
 
         if (TextUtils.isEmpty(ZoneTitle)) {
             Toast.makeText(this, "Please Enter The Zone Title", Toast.LENGTH_SHORT).show();
@@ -218,10 +232,26 @@ public class CapturePictureActivity extends AppCompatActivity
             return;
         }
 
+        if (TextUtils.isEmpty(ZoneSolution)) {
+            Toast.makeText(this, "Please Enter The Zone Solution", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (TextUtils.isEmpty(ZoneImage)) {
+            Toast.makeText(this, "Please Capture The Image First", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         String ZoneKey = databaseReference.push().getKey();
-        Zone zn = new Zone(ZoneKey , ZoneTitle, ZoneData,ZoneSolution, ZoneLat , ZoneLong , ZoneStatus);
+        Zone zn = new Zone(ZoneKey , ZoneTitle, ZoneData,ZoneSolution, ZoneLat , ZoneLong , ZoneStatus , ZoneImage);
         databaseReference.child(ZoneKey).setValue(zn);
         Toast.makeText(this, " All The Details Added Successfully", Toast.LENGTH_SHORT).show();
     }
 
+    @Override
+    public void onClick(View view) {
+        if(view == saveData){
+            addDataZone();
+        }
+    }
 }
