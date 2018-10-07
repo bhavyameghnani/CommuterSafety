@@ -1,11 +1,13 @@
 package com.example.lenovo.commutersafety;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -23,6 +25,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
@@ -39,8 +42,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.UUID;
 
-public class CapturePictureActivity extends AppCompatActivity implements View.OnClickListener
-{
+public class CapturePictureActivity extends AppCompatActivity implements View.OnClickListener {
     private static final String TAG = "CapturePicture";
     static final int REQUEST_PICTURE_CAPTURE = 1;
     private ImageView image;
@@ -52,16 +54,24 @@ public class CapturePictureActivity extends AppCompatActivity implements View.On
     DatabaseReference databaseReference;
     private EditText ztitle, zdesc, zsol;
 
-    public String zoneImageURI=null;
+    public String zoneImageURI = null;
 
     Button saveData;
 
+    public String Lat="abc" , Logg="bcd";
+
+
+    private static final int REQUEST_LOCATION = 1;
+    LocationManager locationManager;
+    String lattitude,longitude;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_capture_picture);
+
+        ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_LOCATION);
 
         databaseReference = FirebaseDatabase.getInstance().getReference("Zones");
         ztitle = (EditText) findViewById(R.id.editTextTitle);
@@ -77,7 +87,7 @@ public class CapturePictureActivity extends AppCompatActivity implements View.On
         saveData.setOnClickListener(this);
 
 
-        if(!getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)){
+        if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
             captureButton.setEnabled(false);
         }
 
@@ -89,11 +99,10 @@ public class CapturePictureActivity extends AppCompatActivity implements View.On
     }
 
 
-
     private View.OnClickListener capture = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
-            if(getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)){
+            if (getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
                 sendTakePictureIntent();
             }
         }
@@ -101,14 +110,14 @@ public class CapturePictureActivity extends AppCompatActivity implements View.On
 
     private void sendTakePictureIntent() {
         Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        cameraIntent.putExtra( MediaStore.EXTRA_FINISH_ON_COMPLETION, true);
+        cameraIntent.putExtra(MediaStore.EXTRA_FINISH_ON_COMPLETION, true);
 
         if (cameraIntent.resolveActivity(getPackageManager()) != null) {
             startActivityForResult(cameraIntent, REQUEST_PICTURE_CAPTURE);
 
             File pictureFile = null;
             try {
-               // Toast.makeText(this, "Flag-1", Toast.LENGTH_SHORT).show();
+                // Toast.makeText(this, "Flag-1", Toast.LENGTH_SHORT).show();
                 pictureFile = getPictureFile();
             } catch (IOException ex) {
                 Toast.makeText(this, "Photo file can't be created, please try again", Toast.LENGTH_SHORT).show();
@@ -119,28 +128,30 @@ public class CapturePictureActivity extends AppCompatActivity implements View.On
                 cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
                 startActivityForResult(cameraIntent, REQUEST_PICTURE_CAPTURE);
             }
-        }
-        else
+        } else
             Toast.makeText(this, "Photo file can't be created, please try again", Toast.LENGTH_SHORT).show();
 
     }
+
     private File getPictureFile() throws IOException {
         String timeStamp = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
         String pictureFile = "CommuterSafety_" + timeStamp;
         File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-        File image = File.createTempFile(pictureFile,  ".jpg", storageDir);
+        File image = File.createTempFile(pictureFile, ".jpg", storageDir);
         pictureFilePath = image.getAbsolutePath();
         return image;
     }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_PICTURE_CAPTURE && resultCode == RESULT_OK) {
-            File imgFile = new  File(pictureFilePath);
-            if(imgFile.exists())            {
+            File imgFile = new File(pictureFilePath);
+            if (imgFile.exists()) {
                 image.setImageURI(Uri.fromFile(imgFile));
             }
         }
     }
+
     //save captured picture in gallery
     private View.OnClickListener saveGallery = new View.OnClickListener() {
         @Override
@@ -148,22 +159,24 @@ public class CapturePictureActivity extends AppCompatActivity implements View.On
             addToGallery();
         }
     };
+
     private void addToGallery() {
         Intent galleryIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
         File f = new File(pictureFilePath);
         Uri picUri = Uri.fromFile(f);
         galleryIntent.setData(picUri);
         this.sendBroadcast(galleryIntent);
-        Toast.makeText(CapturePictureActivity.this, "Image has been uploaded to phone storage"+pictureFilePath, Toast.LENGTH_SHORT).show();
+        Toast.makeText(CapturePictureActivity.this, "Image has been uploaded to phone storage" + pictureFilePath, Toast.LENGTH_SHORT).show();
     }
 
 
     //save captured picture on cloud storage
     private View.OnClickListener saveCloud = new View.OnClickListener() {
         @Override
-        public void onClick(View view) { addToCloudStorage(); }
+        public void onClick(View view) {
+            addToCloudStorage();
+        }
     };
-
 
 
     private void addToCloudStorage() {
@@ -175,13 +188,13 @@ public class CapturePictureActivity extends AppCompatActivity implements View.On
         StorageReference storageRef = firebaseStorage.getReference();
         final StorageReference uploadeRef = storageRef.child(cloudFilePath);
 
-        uploadeRef.putFile(picUri).addOnFailureListener(new OnFailureListener(){
-            public void onFailure(@NonNull Exception exception){
-                Log.e(TAG,"Failed to upload picture to cloud storage");
+        uploadeRef.putFile(picUri).addOnFailureListener(new OnFailureListener() {
+            public void onFailure(@NonNull Exception exception) {
+              //  Log.e(TAG, "Failed to upload picture to cloud storage");
             }
-        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>(){
+        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
-            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot){
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                 uploadeRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                     @Override
                     public void onSuccess(Uri uri) {
@@ -193,6 +206,7 @@ public class CapturePictureActivity extends AppCompatActivity implements View.On
             }
         });
     }
+
     protected synchronized String getInstallationIdentifier() {
         if (deviceIdentifier == null) {
             SharedPreferences sharedPrefs = this.getSharedPreferences(
@@ -212,8 +226,8 @@ public class CapturePictureActivity extends AppCompatActivity implements View.On
         String ZoneTitle = ztitle.getText().toString().trim();
         String ZoneData = zdesc.getText().toString().trim();
         String ZoneSolution = zsol.getText().toString().trim();
-        String ZoneLat = ztitle.getText().toString().trim();
-        String ZoneLong = ztitle.getText().toString().trim();
+        String ZoneLat = Lat;
+        String ZoneLong = Logg;
         String ZoneStatus = ztitle.getText().toString().trim();
         String ZoneImage = zoneImageURI;
 
@@ -243,15 +257,92 @@ public class CapturePictureActivity extends AppCompatActivity implements View.On
         }
 
         String ZoneKey = databaseReference.push().getKey();
-        Zone zn = new Zone(ZoneKey , ZoneTitle, ZoneData,ZoneSolution, ZoneLat , ZoneLong , ZoneStatus , ZoneImage);
+        Zone zn = new Zone(ZoneKey, ZoneTitle, ZoneData, ZoneSolution, ZoneLat, ZoneLong, ZoneStatus, ZoneImage);
         databaseReference.child(ZoneKey).setValue(zn);
         Toast.makeText(this, " All The Details Added Successfully", Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onClick(View view) {
-        if(view == saveData){
+        if (view == saveData) {
+            locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+            if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                buildAlertMessageNoGps();
+
+            } else if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                getLocation();
+            }
             addDataZone();
         }
+    }
+
+    private void getLocation() {
+        if (ActivityCompat.checkSelfPermission(CapturePictureActivity.this, android.Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission
+                (CapturePictureActivity.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+
+            ActivityCompat.requestPermissions(CapturePictureActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_LOCATION);
+
+        } else {
+            Location location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+
+            Location location1 = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+
+            Location location2 = locationManager.getLastKnownLocation(LocationManager. PASSIVE_PROVIDER);
+
+            if (location != null) {
+                double latti = location.getLatitude();
+                double longi = location.getLongitude();
+                lattitude = String.valueOf(latti);
+                longitude = String.valueOf(longi);
+
+                Lat = lattitude;
+                Logg = longitude;
+
+            } else  if (location1 != null) {
+                double latti = location1.getLatitude();
+                double longi = location1.getLongitude();
+                lattitude = String.valueOf(latti);
+                longitude = String.valueOf(longi);
+
+                Lat = lattitude;
+                Logg = longitude;
+
+
+
+            } else  if (location2 != null) {
+                double latti = location2.getLatitude();
+                double longi = location2.getLongitude();
+                lattitude = String.valueOf(latti);
+                longitude = String.valueOf(longi);
+
+                Lat = lattitude;
+                Logg = longitude;
+
+            }else{
+
+                Toast.makeText(this,"Unble to Trace your location",Toast.LENGTH_SHORT).show();
+
+            }
+        }
+    }
+
+    protected void buildAlertMessageNoGps() {
+
+        final android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
+        builder.setMessage("Please Turn ON your GPS Connection")
+                .setCancelable(false)
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    public void onClick(final DialogInterface dialog, final int id) {
+                        startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                    }
+                })
+                .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    public void onClick(final DialogInterface dialog, final int id) {
+                        dialog.cancel();
+                    }
+                });
+        final android.app.AlertDialog alert = builder.create();
+        alert.show();
     }
 }
